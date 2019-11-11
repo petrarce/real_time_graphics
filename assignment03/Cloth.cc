@@ -134,7 +134,7 @@ void Cloth::updateForces()
     ///     - mass is stored in the particle
     ///
     /// ============= STUDENT CODE BEGIN =============
-
+    for (auto& p: particles) p.accumulatedForces += tg::vec3(0.0, gravity, 0.0) * p.mass;
     /// ============= STUDENT CODE END =============
 
     // Apply Hooke's Law
@@ -156,7 +156,17 @@ void Cloth::updateForces()
         ///       for stress rendering (optional)
         ///
         /// ============= STUDENT CODE BEGIN =============
+        auto force_orient = direction(s.p0->position, s.p1->position);
 
+        auto excess = distance(s.p0->position, s.p1->position) - s.restDistance;
+
+        auto force = force_orient * excess * springK;
+
+        s.p0->accumulatedForces += force;
+        s.p1->accumulatedForces -= force;
+
+        s.p0->stress = length(force);
+        s.p1->stress = length(force);
         /// ============= STUDENT CODE END =============
     }
 
@@ -182,7 +192,7 @@ void Cloth::updateForces()
         ///     - the amount of damping also depends on particle velocity
         ///
         /// ============= STUDENT CODE BEGIN =============
-
+        p.accumulatedForces -= dampingD * p.velocity;
         /// ============= STUDENT CODE END =============
     }
 }
@@ -209,7 +219,9 @@ void Cloth::updateMotion(float elapsedSeconds)
         ///     - particle mass is stored in p.mass
         ///
         /// ============= STUDENT CODE BEGIN =============
-
+        auto acc = p.accumulatedForces / p.mass;
+        p.velocity += acc * elapsedSeconds;
+        p.position += p.velocity * elapsedSeconds;
         /// ============= STUDENT CODE END =============
     }
 }
@@ -232,7 +244,14 @@ void Cloth::addSphereCollision(tg::pos3 center, float radius)
         ///     - After projection, the velocity vector lies in that plane
         ///
         /// ============= STUDENT CODE BEGIN =============
+        if (radius <= distance(p.position, center))
+            continue;
 
+        auto displ_orient = direction(p.position, center);
+
+        p.velocity = cross(cross(displ_orient, p.velocity), displ_orient);
+
+        p.position = center - displ_orient * radius;
         /// ============= STUDENT CODE END =============
     }
 }
@@ -319,9 +338,19 @@ SharedVertexArray Cloth::createVAO()
     for (int y = 0; y < res; ++y)
         for (int x = 0; x < res; ++x)
         {
-            tg::vec3 n = {0, 1, 0}; // FIXME
+            auto pN = pos(x, y - 1);
+            auto pS = pos(x, y + 1);
+            auto pW = pos(x - 1, y);
+            auto pE = pos(x + 1, y);
 
-            normals[y * res + x] = n;
+            auto center = (pN + pW + pS + pE) / 4.0;
+
+            auto nNW = normalize(cross(pN - center, pW - center));
+            auto nWS = normalize(cross(pW - center, pS - center));
+            auto nSE = normalize(cross(pS - center, pE - center));
+            auto nEN = normalize(cross(pE - center, pN - center));
+
+            normals[y * res + x] = normalize((nNW + nWS + nSE + nEN) / 4.0);
         }
 
     /// ============= STUDENT CODE END =============
@@ -361,7 +390,30 @@ SharedVertexArray Cloth::createVAO()
                 ///     - see notes for Task 1.a
                 ///
                 /// ============= STUDENT CODE BEGIN =============
+                auto n00 = normals[y * res + x];
+                auto n01 = normals[y * res + res + x];
+                auto n11 = normals[y * res + res + x + 1];
+                auto n10 = normals[y * res + x + 1];
 
+                auto pCT = (p00 + p01 + p11 + p10) / 4.0;
+                auto nCT = (n00 + n01 + n11 + n10) / 4.0;
+                auto cCT = (c00 + c01 + c11 + c10) / 4.0;
+
+                vertices.push_back({p00, n00, c00});
+                vertices.push_back({p01, n01, c01});
+                vertices.push_back({pCT, nCT, cCT});
+
+                vertices.push_back({p01, n01, c01});
+                vertices.push_back({p11, n11, c11});
+                vertices.push_back({pCT, nCT, cCT});
+
+                vertices.push_back({p11, n11, c11});
+                vertices.push_back({p10, n10, c10});
+                vertices.push_back({pCT, nCT, cCT});
+
+                vertices.push_back({p10, n10, c10});
+                vertices.push_back({p00, n00, c00});
+                vertices.push_back({pCT, nCT, cCT});
                 /// ============= STUDENT CODE END =============
             }
             else
@@ -386,7 +438,16 @@ SharedVertexArray Cloth::createVAO()
                 ///     - add vertices via `vertices.push_back({<position>, <normal>, <color>});`
                 ///
                 /// ============= STUDENT CODE BEGIN =============
+                tg::vec3 n00 = normalize(cross(p01 - p00, p10 - p00));
+                tg::vec3 n11 = normalize(cross(p10 - p11, p01 - p11));
 
+                vertices.push_back({p00, n00, c00});
+                vertices.push_back({p01, n00, c01});
+                vertices.push_back({p10, n00, c10});
+
+                vertices.push_back({p11, n11, c11});
+                vertices.push_back({p10, n11, c10});
+                vertices.push_back({p01, n11, c01});
                 /// ============= STUDENT CODE END =============
             }
         }
