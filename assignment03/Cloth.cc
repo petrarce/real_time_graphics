@@ -343,14 +343,20 @@ SharedVertexArray Cloth::createVAO()
             auto pW = pos(x - 1, y);
             auto pE = pos(x + 1, y);
 
-            auto center = (pN + pW + pS + pE) / 4.0;
+            auto center = pos(x, y);
 
-            auto nNW = normalize(cross(pN - center, pW - center));
-            auto nWS = normalize(cross(pW - center, pS - center));
-            auto nSE = normalize(cross(pS - center, pE - center));
-            auto nEN = normalize(cross(pE - center, pN - center));
+            if (x == 0) { pW = center; }
+            if (x == res - 1) { pE = center; }
 
-            normals[y * res + x] = normalize((nNW + nWS + nSE + nEN) / 4.0);
+            if (y == 0) { pN = center; }
+            if (y == res - 1) { pS = center; }
+
+            auto nNW = cross(pN - center, pW - center);
+            auto nWS = cross(pW - center, pS - center);
+            auto nSE = cross(pS - center, pE - center);
+            auto nEN = cross(pE - center, pN - center);
+
+            normals[y * res + x] = normalize(nNW + nWS + nSE + nEN);
         }
 
     /// ============= STUDENT CODE END =============
