@@ -34,8 +34,19 @@ void RigidBody::calculateMassAndInertia()
 
     for (auto const& s : samples)
     {
-        // s.offset   (sample offset in body space)
-        // s.mass     (sample mass)
+        mass += s.mass;
+        cog += s.mass * s.offset;
+
+        inertia[0][0] += s.mass * (s.offset[1] * s.offset[1] + s.offset[2] * s.offset[2]);
+        inertia[1][1] += s.mass * (s.offset[2] * s.offset[2] + s.offset[0] * s.offset[0]);
+        inertia[2][2] += s.mass * (s.offset[0] * s.offset[0] + s.offset[1] * s.offset[1]);
+
+        inertia[0][1] -= s.mass * (s.offset[1] * s.offset[0]);
+        inertia[1][0] -= s.mass * (s.offset[0] * s.offset[1]);
+        inertia[0][2] -= s.mass * (s.offset[2] * s.offset[0]);
+        inertia[2][0] -= s.mass * (s.offset[0] * s.offset[2]);
+        inertia[1][2] -= s.mass * (s.offset[2] * s.offset[1]);
+        inertia[2][1] -= s.mass * (s.offset[1] * s.offset[2]);
     }
 
 /// ============= STUDENT CODE END =============
@@ -128,10 +139,15 @@ void RigidBody::update(float elapsedSeconds)
 /// ============= STUDENT CODE BEGIN =============
 
         // update
-        // - linearMomentum
-        // - linearPosition
-        // - angularMomentum
-        // - angularPosition
+        linearMomentum += linearForces * elapsedSeconds;
+
+        linearPosition += linearVelocity() * elapsedSeconds;
+
+        angularMomentum += angularForces * elapsedSeconds;
+
+        angularPosition[0] += cross(omega, angularPosition[0]) * elapsedSeconds;
+        angularPosition[1] += cross(omega, angularPosition[1]) * elapsedSeconds;
+        angularPosition[2] += cross(omega, angularPosition[2]) * elapsedSeconds;
 
 /// ============= STUDENT CODE END =============
 
@@ -233,38 +249,40 @@ tg::mat4 RigidBody::getTransform() const
 ///
 /// Notes:
 ///     - in some of the methods you might need to call one of the others
-///     - if needed, you should use the glm functions cross, inverse and transpose
+///     - if needed, you should use the tg functions cross, inverse and transpose
 ///
 /// ============= STUDENT CODE BEGIN =============
 
 tg::vec3 RigidBody::linearVelocity() const
 {
-    return tg::vec3(0.0f); // TODO
+    return 1.0 / mass * linearMomentum;
 }
 
 tg::vec3 RigidBody::angularVelocity() const
 {
-    return tg::vec3(0.0f); // TODO
+    return invInertiaWorld() * angularMomentum;
 }
 
 tg::vec3 RigidBody::velocityInPoint(tg::pos3 worldPos) const
 {
-    return tg::vec3(0.0f); // TODO
+    return linearVelocity() + cross(angularVelocity(), worldPos - linearPosition);
 }
 
 tg::mat3 RigidBody::invInertiaWorld() const
 {
-    return tg::mat3::zero; // TODO
+    return angularPosition * inverse(inertia) * transpose(angularPosition);
 }
 
 void RigidBody::applyImpulse(tg::vec3 impulse, tg::pos3 worldPos)
 {
-    // TODO
+    linearMomentum += impulse;
+    angularMomentum += cross(worldPos - linearPosition, impulse);
 }
 
 void RigidBody::addForce(tg::vec3 force, tg::pos3 worldPos)
 {
-    // TODO
+    linearForces += force;
+    angularForces += cross(worldPos - linearPosition, force);
 }
 
 /// ============= STUDENT CODE END =============

@@ -2,8 +2,6 @@
 
 #include <glow/common/shared.hh>
 
-#include <glm/ext.hpp>
-
 #include "Shapes.hh"
 
 GLOW_SHARED(struct, Shape);

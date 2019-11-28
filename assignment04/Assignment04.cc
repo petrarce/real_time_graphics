@@ -204,13 +204,33 @@ void Assignment04::renderScene(bool shadowPass)
                 // draw spheres
                 if (sphere)
                 {
-                    // TODO
+                    auto model = tg::mat4::identity;
+
+                    model[0][0] = sphere->radius;
+                    model[1][1] = sphere->radius;
+                    model[2][2] = sphere->radius;
+
+                    model = mRigidBody.getTransform() * sphere->transform * model;
+
+                    shader.setUniform("uModelMatrix", model);
+
+                    mMeshSphere->bind().draw();
                 }
 
                 // draw boxes
                 if (box)
                 {
-                    // TODO
+                    auto model = tg::mat4::identity;
+
+                    model[0][0] = box->halfExtent[0];
+                    model[1][1] = box->halfExtent[1];
+                    model[2][2] = box->halfExtent[2];
+
+                    model = mRigidBody.getTransform() * box->transform * model;
+
+                    shader.setUniform("uModelMatrix", model);
+
+                    mMeshCube->bind().draw();
                 }
             }
 
@@ -337,12 +357,24 @@ void Assignment04::loadPreset(Preset preset)
 
 void Assignment04::buildLineMesh()
 {
-    // TODO
+
 }
 
 void Assignment04::drawLine(tg::pos3 from, tg::pos3 to, tg::color3 color)
 {
-    // TODO
+    SharedArrayBuffer ab = ArrayBuffer::create();
+
+    ab->defineAttribute<tg::pos3>("aPosition");
+
+    ab->bind().setData({from, to});
+
+    mMeshLine = VertexArray::create(ab, GL_LINES);
+
+    auto shader = mShaderLine->use();
+
+    shader.setUniform("uColor", color);
+
+    mMeshLine->bind().draw();
 }
 
 /// ============= STUDENT CODE END =============

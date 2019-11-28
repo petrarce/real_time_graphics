@@ -13,13 +13,13 @@ uniform mat4 uProjectionMatrix;
 ///
 /// ============= STUDENT CODE BEGIN =============
 
-// maybe some attributes?
+in vec3 aPosition;
 
-// maybe some uniforms?
+uniform vec3 uColor;
 
 void main() 
 {
-    // gl_Position = ...;
+    gl_Position = uProjectionMatrix * uViewMatrix * vec4(aPosition, 1.0);
 }
 
 /// ============= STUDENT CODE END =============
