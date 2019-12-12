@@ -63,6 +63,9 @@ std::map<int, SharedVertexArray> Chunk::queryMeshes()
 {
     GLOW_ACTION(); // time this method (shown on shutdown)
 
+    if(!isDirty()){
+        return this->mMeshes;
+    }
     // clear list of cached meshes
     mMeshes.clear();
     std::set<int> built; // track already built materials
@@ -88,6 +91,7 @@ std::map<int, SharedVertexArray> Chunk::queryMeshes()
                 }
             }
 
+    this->mIsDirty = false;
     glow::info() << "Rebuilding mesh for " << chunkPos;
     return mMeshes;
 }
@@ -104,21 +108,50 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
             for (auto x = 0; x < size; ++x)
             {
                 tg::ivec3 rp = { x, y, z }; // local position
-                auto gp = chunkPos + rp;     // global position
+                tg::ipos3 gp = chunkPos + rp;     // global position
                 auto const &blk = block(rp);
 
                 if (blk.mat != mat)
                     continue; // consider only current material
 
                 // go over all 6 directions
-                for (auto s : { -1, 1 })
+                for (auto s : { -1, 1 }){
+                    tg::ipos3 ptPos = gp - tg::ivec3(1,1,1)*((-1-s)/2);
                     for (auto dir : { 0, 1, 2 })
                     {
                         // face normal
+                        //glow::info() << "setting new pair of triangles";
                         auto n = s * tg::ivec3(dir == 0, dir == 1, dir == 2);
-
+                        auto tg1 = -s * tg::ivec3(dir == 2, dir == 0, dir == 1);
+                        auto tg2 = -s * tg::ivec3(dir == 1, dir == 2, dir == 0);
+                        //glow::info() << "gp=" << gp;
+                        //glow::info() << "ptPos=" << ptPos;
+                        //glow::info() << "n=" << n << ", tg1=" << tg1 << ", th2=" << tg2;
                         // TODO!
+                        tg::ipos3 vert1 = ptPos;
+                        tg::ipos3 vert2 = ptPos + tg1;
+                        tg::ipos3 vert3 = ptPos + tg2;
+
+                        tg::ipos3 vert4 = ptPos + tg1;
+                        tg::ipos3 vert5 = ptPos + tg2;
+                        tg::ipos3 vert6 = ptPos + tg1 + tg2;
+                        //glow::info() << "v1=" << vert1 << ", v2=" << vert2 << ", v3=" << vert3;
+                        //glow::info() << "v4=" << vert4 << ", v5=" << vert5 << ", v6=" << vert6;
+                        TerrainVertex tmp;
+                        tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);;
+                        vertices.push_back(tmp);
+                        tmp.pos = tg::pos3(vert2[0], vert2[1], vert2[2]);;
+                        vertices.push_back(tmp);
+                        tmp.pos = tg::pos3(vert3[0], vert3[1], vert3[2]);;
+                        vertices.push_back(tmp);
+                        tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);;
+                        vertices.push_back(tmp);
+                        tmp.pos = tg::pos3(vert5[0], vert5[1], vert5[2]);;
+                        vertices.push_back(tmp);
+                        tmp.pos = tg::pos3(vert6[0], vert6[1], vert6[2]);;
+                        vertices.push_back(tmp);
                     }
+                }
             }
 
     if (vertices.empty())
