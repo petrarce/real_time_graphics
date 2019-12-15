@@ -30,11 +30,14 @@
 struct TerrainVertex
 {
     tg::pos3 pos;
-
+    //tg::pos2 texCoord;
+    int texAndNormalType;
     static std::vector<glow::ArrayBufferAttribute> attributes()
     {
         return {
             { &TerrainVertex::pos, "aPosition" },  //
+            //{ &TerrainVertex::texCoord, "aTexCoord"},//
+            { &TerrainVertex::texAndNormalType, "aNormAndTexCoord"},//
         };
     }
 };

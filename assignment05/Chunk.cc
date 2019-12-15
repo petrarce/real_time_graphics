@@ -138,17 +138,29 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                         //glow::info() << "v1=" << vert1 << ", v2=" << vert2 << ", v3=" << vert3;
                         //glow::info() << "v4=" << vert4 << ", v5=" << vert5 << ", v6=" << vert6;
                         TerrainVertex tmp;
-                        tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);;
+                        tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
+                        //tmp.texCoord = tg::pos2(0,0);
+                        tmp.texAndNormalType = 0;
                         vertices.push_back(tmp);
-                        tmp.pos = tg::pos3(vert2[0], vert2[1], vert2[2]);;
+                        tmp.pos = tg::pos3(vert2[0], vert2[1], vert2[2]);
+                        //tmp.texCoord = tg::pos2(0,1);
+                        tmp.texAndNormalType = 1<<16;
                         vertices.push_back(tmp);
-                        tmp.pos = tg::pos3(vert3[0], vert3[1], vert3[2]);;
+                        tmp.pos = tg::pos3(vert3[0], vert3[1], vert3[2]);
+                        //tmp.texCoord = tg::pos2(1,0);
+                        tmp.texAndNormalType = 2<<16;
                         vertices.push_back(tmp);
-                        tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);;
+                        tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);
+                       // tmp.texCoord = tg::pos2(0,1);
+                        tmp.texAndNormalType = 1<<16;
                         vertices.push_back(tmp);
-                        tmp.pos = tg::pos3(vert5[0], vert5[1], vert5[2]);;
+                        tmp.pos = tg::pos3(vert5[0], vert5[1], vert5[2]);
+                        //tmp.texCoord = tg::pos2(1,0);
+                        tmp.texAndNormalType = 2<<16;
                         vertices.push_back(tmp);
-                        tmp.pos = tg::pos3(vert6[0], vert6[1], vert6[2]);;
+                        tmp.pos = tg::pos3(vert6[0], vert6[1], vert6[2]);
+                       // tmp.texCoord = tg::pos2(1,1);
+                        tmp.texAndNormalType = 3<<16;
                         vertices.push_back(tmp);
                     }
                 }

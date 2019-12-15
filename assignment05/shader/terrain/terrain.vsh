@@ -26,12 +26,33 @@ uniform float uTextureScale;
 /// ============= STUDENT CODE BEGIN =============
 
 in vec3 aPosition;
+//in vec2 aTexCoord;
+in int 	aNormAndTexCoord;
+
+vec2 texCoord[4] = vec2[4](
+	vec2(0,0),
+	vec2(0,1),
+	vec2(1,0),
+	vec2(1,1)
+);	
+
+vec3 axe[6] = vec3[6](
+	vec3(0,0,1),
+	vec3(0,1,0),
+	vec3(1,0,0),
+	vec3(0,0,-1),
+	vec3(0,-1,0),
+	vec3(-1,0,0)
+);
+
 
 void main()
 {
-    vNormal = vec3(0, 1, 0);
-    vTangent = vec3(1, 0, 0);
-    vTexCoord = vec2(0, 0); // don't forget uTextureScale
+	int normInd		= (aNormAndTexCoord>>24)&0xff;
+	int texCoordInd = (aNormAndTexCoord>>16)&0xff;
+    vNormal = axe[normInd];
+    vTangent = vNormal.yzx;
+    vTexCoord = texCoord[texCoordInd];// don't forget uTextureScale
     vAO = 1.0;
 
     vWorldPos = aPosition;
