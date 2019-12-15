@@ -102,7 +102,7 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
 
     // assemble data
     std::vector<TerrainVertex> vertices;
-
+    int dbgcnt = 0;
     for (auto z = 0; z < size; ++z)
         for (auto y = 0; y < size; ++y)
             for (auto x = 0; x < size; ++x)
@@ -115,13 +115,17 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                     continue; // consider only current material
 
                 // go over all 6 directions
-                for (auto s : { -1, 1 }){
-                    tg::ipos3 ptPos = gp - tg::ivec3(1,1,1)*((-1-s)/2);
-                    for (auto dir : { 0, 1, 2 })
+                tg::ivec3 normals[3] = {tg::ivec3(1,0,0),tg::ivec3(0,1,0), tg::ivec3(0,0,1)};
+                tg::ivec3 tangens1[3] = {tg::ivec3(0,-1,0), tg::ivec3(0,0,-1), tg::ivec3(-1,0,0)};
+                tg::ivec3 tangens2[3] = {tg::ivec3(0,0,-1), tg::ivec3(-1,0,0), tg::ivec3(0,-1,0)};
+                //glow::info() << "build new box";
+                for (int s : { -1, 1 }){
+                    for (int dir : { 0, 1, 2 })
                     {
                         // face normal
-                        //glow::info() << "setting new pair of triangles";
-                        auto n = s * tg::ivec3(dir == 0, dir == 1, dir == 2);
+                        tg::ivec3 n = s * normals[dir];
+                        tg::ipos3 ptPos = gp + tg::ivec3(1,1,1)*(1+s)/2;
+
                         auto neighborBlock = rp + n;
                         if(neighborBlock[0] < size && neighborBlock[0] > 0 &&
                             neighborBlock[1] < size && neighborBlock[1] > 0 &&
@@ -129,81 +133,78 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                             block(neighborBlock).mat > 0 ){
                             continue;
                         }
-                        auto tg1 = -s * tg::ivec3(dir == 2, dir == 0, dir == 1);
-                        auto tg2 = -s * tg::ivec3(dir == 1, dir == 2, dir == 0);
-                        //glow::info() << "gp=" << gp;
-                        //glow::info() << "ptPos=" << ptPos;
-                        //glow::info() << "n=" << n << ", tg1=" << tg1 << ", th2=" << tg2;
+                        //glow::info() << "build new fase";
+
+                        auto tg1 = s * tangens1[dir];
+                        auto tg2 = s * tangens2[dir];
                         // TODO!
                         tg::ipos3 vert1 = ptPos;
-                        tg::ipos3 vert2 = ptPos + tg1;
-                        tg::ipos3 vert3 = ptPos + tg2;
-
-                        tg::ipos3 vert4 = ptPos + tg1;
-                        tg::ipos3 vert5 = ptPos + tg2;
-                        tg::ipos3 vert6 = ptPos + tg1 + tg2;
-                        //glow::info() << "v1=" << vert1 << ", v2=" << vert2 << ", v3=" << vert3;
-                        //glow::info() << "v4=" << vert4 << ", v5=" << vert5 << ", v6=" << vert6;
+                        tg::ipos3 vert2;
+                        tg::ipos3 vert3;
+                        if(s > 0){
+                            vert2 = ptPos + tg1;
+                            vert3 = ptPos + tg2;
+                        } else {
+                            vert2 = ptPos + tg2;
+                            vert3 = ptPos + tg1;
+                        }
+                        tg::ipos3 vert4 = ptPos + tg1 + tg2;
+                        if(dbgcnt < 20){
+                            glow::info() << "gp=" << gp;
+                            glow::info() << "n=" << n;
+                            glow::info() << "tg1=" << tg1;
+                            glow::info() << "tg2=" << tg2;
+                            glow::info() << "vert1=" << vert1;
+                            glow::info() << "vert2=" << vert2;
+                            glow::info() << "vert3=" << vert3;
+                            glow::info() << "vert4=" << vert4;
+                            dbgcnt++;
+                        }
                         TerrainVertex tmp;
-                        tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
-                        tmp.texAndNormalType = (0*(n[2]==1) + 
+                        int normalType = (0*(n[2]==1) + 
                                                 1*(n[1]==1) +
                                                 2*(n[0]==1) +
                                                 3*(n[2]==-1) + 
                                                 4*(n[1]==-1) +
-                                                5*(n[0]==-1))<<24;
-                        tmp.texAndNormalType |= 0<<16;
+                                                5*(n[0]==-1));
+
+                        tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
+                        tmp.texAndNormalType = normalType<<24;
+                        tmp.texAndNormalType |= (0<<16&0x00ff0000);
                         vertices.push_back(tmp);
+
 
                         tmp.pos = tg::pos3(vert2[0], vert2[1], vert2[2]);
-                        tmp.texAndNormalType = (0*(n[2]==1) + 
-                                                1*(n[1]==1) +
-                                                2*(n[0]==1) +
-                                                3*(n[2]==-1) + 
-                                                4*(n[1]==-1) +
-                                                5*(n[0]==-1))<<24;
-                        tmp.texAndNormalType |= 1<<16;
-                        vertices.push_back(tmp);
-
-                        tmp.pos = tg::pos3(vert3[0], vert3[1], vert3[2]);
-                        tmp.texAndNormalType = (0*(n[2]==1) + 
-                                                1*(n[1]==1) +
-                                                2*(n[0]==1) +
-                                                3*(n[2]==-1) + 
-                                                4*(n[1]==-1) +
-                                                5*(n[0]==-1))<<24;
-                        tmp.texAndNormalType |= 2<<16;
+                        tmp.texAndNormalType = normalType<<24;
+                        tmp.texAndNormalType |= (2<<16&0x00ff0000);
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);
-                        tmp.texAndNormalType = (0*(n[2]==1) + 
-                                                1*(n[1]==1) +
-                                                2*(n[0]==1) +
-                                                3*(n[2]==-1) + 
-                                                4*(n[1]==-1) +
-                                                5*(n[0]==-1))<<24;
-                        tmp.texAndNormalType |= 1<<16;
+                        tmp.texAndNormalType = normalType<<24;
+                        tmp.texAndNormalType |= (3<<16&0x00ff0000);
                         vertices.push_back(tmp);
 
-                        tmp.pos = tg::pos3(vert5[0], vert5[1], vert5[2]);
-                        tmp.texAndNormalType = (0*(n[2]==1) + 
-                                                1*(n[1]==1) +
-                                                2*(n[0]==1) +
-                                                3*(n[2]==-1) + 
-                                                4*(n[1]==-1) +
-                                                5*(n[0]==-1))<<24;
-                        tmp.texAndNormalType |= 2<<16;
+
+                        tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
+                        tmp.texAndNormalType = normalType<<24;
+                        tmp.texAndNormalType |= (0<<16&0x00ff0000);
                         vertices.push_back(tmp);
 
-                        tmp.pos = tg::pos3(vert6[0], vert6[1], vert6[2]);
-                        tmp.texAndNormalType = (0*(n[2]==1) + 
-                                                1*(n[1]==1) +
-                                                2*(n[0]==1) +
-                                                3*(n[2]==-1) + 
-                                                4*(n[1]==-1) +
-                                                5*(n[0]==-1))<<24;
-                        tmp.texAndNormalType |= 3<<16;
+
+
+                        tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);
+                        tmp.texAndNormalType = normalType<<24;
+                        tmp.texAndNormalType |= (3<<16&0x00ff0000);
                         vertices.push_back(tmp);
+
+                        tmp.pos = tg::pos3(vert3[0], vert3[1], vert3[2]);
+                        tmp.texAndNormalType = normalType<<24;
+                        tmp.texAndNormalType |= (1<<16&0x00ff0000);
+                        vertices.push_back(tmp);
+
+
+
+
 
                     }
                 }
