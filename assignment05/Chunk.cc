@@ -96,6 +96,24 @@ std::map<int, SharedVertexArray> Chunk::queryMeshes()
     return mMeshes;
 }
 
+int Chunk::getAOtype(const tg::ivec3& pt, const tg::ivec3& n, const tg::ivec3& tg1, const tg::ivec3& tg2) const
+{
+    auto body1pt = pt + n + tg1;
+    auto body2pt = pt + n + tg2 + tg1;
+    auto body3pt = pt + n + tg2;
+    bool body1 = ((body1pt.x < size) && (body1pt.y < size) && (body1pt.z < size) && (block(body1pt).mat != 0));
+    bool body2 = ((body2pt.x < size) && (body2pt.y < size) && (body2pt.z < size) && (block(body2pt).mat != 0));
+    bool body3 = ((body3pt.x < size) && (body3pt.y < size) && (body3pt.z < size) && (block(body3pt).mat != 0));
+    if(body1 && body3){
+        return 0;
+    } else if((body1 && body2) || (body2 && body3)){
+        return 1;
+    } else if(body1 || body3){
+        return 2;
+    }
+    return 3;
+}
+
 SharedVertexArray Chunk::buildMeshFor(int mat) const
 {
     GLOW_ACTION(); // time this method (shown on shutdown)
@@ -171,35 +189,46 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                         tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (0<<16&0x00ff0000);
+                        tmp.texAndNormalType |= getAOtype(rp, n, -tg1, -tg2)<<8;
                         vertices.push_back(tmp);
-
 
                         tmp.pos = tg::pos3(vert2[0], vert2[1], vert2[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (2<<16&0x00ff0000);
+                        if(s > 0){
+                            tmp.texAndNormalType |= getAOtype(rp, n, tg1, -tg2)<<8;
+                        } else {
+                            tmp.texAndNormalType |= getAOtype(rp, n, -tg1, tg2)<<8;
+                        }
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (3<<16&0x00ff0000);
+                        tmp.texAndNormalType |= getAOtype(rp, n, tg1, tg2)<<8;
                         vertices.push_back(tmp);
-
 
                         tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (0<<16&0x00ff0000);
+                        tmp.texAndNormalType |= getAOtype(rp, n, -tg1, -tg2)<<8;
                         vertices.push_back(tmp);
-
-
 
                         tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (3<<16&0x00ff0000);
+                        tmp.texAndNormalType |= getAOtype(rp, n, tg1, tg2)<<8;
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert3[0], vert3[1], vert3[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (1<<16&0x00ff0000);
+                        if(s > 0){
+                            tmp.texAndNormalType |= getAOtype(rp, n, -tg1, tg2)<<8;
+                        } else {
+                            tmp.texAndNormalType |= getAOtype(rp, n, tg1, -tg2)<<8;
+                           
+                        }
                         vertices.push_back(tmp);
 
 

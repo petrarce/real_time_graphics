@@ -45,15 +45,18 @@ vec3 axe[6] = vec3[6](
 	vec3(-1,0,0)
 );
 
+float ao[4] = float[4](0, 0.33, 0.66, 1);
+
 
 void main()
 {
 	int normInd		= (aNormAndTexCoord>>24)&0xff;
 	int texCoordInd = (aNormAndTexCoord>>16)&0xff;
+	int aoInd 		= (aNormAndTexCoord>>8)&0xff;
     vNormal = axe[normInd];
     vTangent = vNormal.yzx;
     vTexCoord = texCoord[texCoordInd];// don't forget uTextureScale
-    vAO = 1.0;
+    vAO = ao[aoInd];
 
     vWorldPos = aPosition;
     vViewPos = vec3(uView * vec4(aPosition, 1.0));
