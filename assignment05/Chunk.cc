@@ -101,9 +101,18 @@ int Chunk::getAOtype(const tg::ivec3& pt, const tg::ivec3& n, const tg::ivec3& t
     auto body1pt = pt + n + tg1;
     auto body2pt = pt + n + tg2 + tg1;
     auto body3pt = pt + n + tg2;
-    bool body1 = ((body1pt.x < size) && (body1pt.y < size) && (body1pt.z < size) && (block(body1pt).mat != 0));
-    bool body2 = ((body2pt.x < size) && (body2pt.y < size) && (body2pt.z < size) && (block(body2pt).mat != 0));
-    bool body3 = ((body3pt.x < size) && (body3pt.y < size) && (body3pt.z < size) && (block(body3pt).mat != 0));
+    bool body1 = ((body1pt.x < size && body1pt.x >= 0) && 
+                    (body1pt.y < size && body1pt.y >= 0) && 
+                    (body1pt.z < size && body1pt.z >= 0) && 
+                    (block(body1pt).mat != 0));
+    bool body2 = ((body2pt.x < size && body2pt.x >= 0) && 
+                    (body2pt.y < size && body2pt.y >= 0) && 
+                    (body2pt.z < size && body2pt.z >= 0) && 
+                    (block(body2pt).mat != 0));
+    bool body3 = ((body3pt.x < size && body3pt.x >= 0) && 
+                    (body3pt.y < size && body3pt.y >= 0) && 
+                    (body3pt.z < size && body3pt.z >= 0) && 
+                    (block(body3pt).mat != 0));
     if(body1 && body3){
         return 0;
     } else if((body1 && body2) || (body2 && body3)){
