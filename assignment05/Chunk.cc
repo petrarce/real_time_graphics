@@ -117,7 +117,7 @@ int Chunk::getAOtype(const tg::ivec3& pt, const tg::ivec3& n, const tg::ivec3& t
         return 0;
     } else if((body1 && body2) || (body2 && body3)){
         return 1;
-    } else if(body1 || body3){
+    } else if(body1 || body3 || body2){
         return 2;
     }
     return 3;
