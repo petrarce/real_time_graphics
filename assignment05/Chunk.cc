@@ -96,23 +96,14 @@ std::map<int, SharedVertexArray> Chunk::queryMeshes()
     return mMeshes;
 }
 
-int Chunk::getAOtype(const tg::ivec3& pt, const tg::ivec3& n, const tg::ivec3& tg1, const tg::ivec3& tg2) const
+int Chunk::getAOtype(const tg::ipos3& pt, const tg::ivec3& n, const tg::ivec3& tg1, const tg::ivec3& tg2) const
 {
     auto body1pt = pt + n + tg1;
     auto body2pt = pt + n + tg2 + tg1;
     auto body3pt = pt + n + tg2;
-    bool body1 = ((body1pt.x < size && body1pt.x >= 0) && 
-                    (body1pt.y < size && body1pt.y >= 0) && 
-                    (body1pt.z < size && body1pt.z >= 0) && 
-                    (block(body1pt).mat != 0));
-    bool body2 = ((body2pt.x < size && body2pt.x >= 0) && 
-                    (body2pt.y < size && body2pt.y >= 0) && 
-                    (body2pt.z < size && body2pt.z >= 0) && 
-                    (block(body2pt).mat != 0));
-    bool body3 = ((body3pt.x < size && body3pt.x >= 0) && 
-                    (body3pt.y < size && body3pt.y >= 0) && 
-                    (body3pt.z < size && body3pt.z >= 0) && 
-                    (block(body3pt).mat != 0));
+    bool body1 = ((this->queryBlock(body1pt).mat != 0));
+    bool body2 = ((this->queryBlock(body2pt).mat != 0));
+    bool body3 = ((this->queryBlock(body3pt).mat != 0));
     if(body1 && body3){
         return 0;
     } else if((body1 && body2) || (body2 && body3)){
@@ -153,13 +144,16 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                         tg::ivec3 n = s * normals[dir];
                         tg::ipos3 ptPos = gp + tg::ivec3(1,1,1)*(1+s)/2;
 
-                        auto neighborBlock = rp + n;
-                        if(neighborBlock[0] < size && neighborBlock[0] > 0 &&
-                            neighborBlock[1] < size && neighborBlock[1] > 0 &&
-                            neighborBlock[2] < size && neighborBlock[2] > 0 &&
-                            block(neighborBlock).mat > 0 ){
-                            continue;
-                        }
+                        bool this_solid = block(rp).isSolid();
+                        bool this_fluid = block(rp).isTranslucent();
+
+                        bool that_solid = this->queryBlock(gp + n).isSolid();
+                        bool that_fluid = this->queryBlock(gp + n).isTranslucent();
+
+                        bool same_mat = block(rp).mat == this->queryBlock(gp + n).mat;
+
+                        if (this_solid & that_solid) continue;
+                        if (this_fluid & that_fluid & same_mat) continue;
                         //glow::info() << "build new fase";
 
                         auto tg1 = s * tangens1[dir];
@@ -198,44 +192,44 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                         tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (0<<16&0x00ff0000);
-                        tmp.texAndNormalType |= getAOtype(rp, n, -tg1, -tg2)<<8;
+                        tmp.texAndNormalType |= getAOtype(gp, n, -tg1, -tg2)<<8;
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert2[0], vert2[1], vert2[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (2<<16&0x00ff0000);
                         if(s > 0){
-                            tmp.texAndNormalType |= getAOtype(rp, n, tg1, -tg2)<<8;
+                            tmp.texAndNormalType |= getAOtype(gp, n, tg1, -tg2)<<8;
                         } else {
-                            tmp.texAndNormalType |= getAOtype(rp, n, -tg1, tg2)<<8;
+                            tmp.texAndNormalType |= getAOtype(gp, n, -tg1, tg2)<<8;
                         }
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (3<<16&0x00ff0000);
-                        tmp.texAndNormalType |= getAOtype(rp, n, tg1, tg2)<<8;
+                        tmp.texAndNormalType |= getAOtype(gp, n, tg1, tg2)<<8;
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert1[0], vert1[1], vert1[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (0<<16&0x00ff0000);
-                        tmp.texAndNormalType |= getAOtype(rp, n, -tg1, -tg2)<<8;
+                        tmp.texAndNormalType |= getAOtype(gp, n, -tg1, -tg2)<<8;
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert4[0], vert4[1], vert4[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (3<<16&0x00ff0000);
-                        tmp.texAndNormalType |= getAOtype(rp, n, tg1, tg2)<<8;
+                        tmp.texAndNormalType |= getAOtype(gp, n, tg1, tg2)<<8;
                         vertices.push_back(tmp);
 
                         tmp.pos = tg::pos3(vert3[0], vert3[1], vert3[2]);
                         tmp.texAndNormalType = normalType<<24;
                         tmp.texAndNormalType |= (1<<16&0x00ff0000);
                         if(s > 0){
-                            tmp.texAndNormalType |= getAOtype(rp, n, -tg1, tg2)<<8;
+                            tmp.texAndNormalType |= getAOtype(gp, n, -tg1, tg2)<<8;
                         } else {
-                            tmp.texAndNormalType |= getAOtype(rp, n, tg1, -tg2)<<8;
+                            tmp.texAndNormalType |= getAOtype(gp, n, tg1, -tg2)<<8;
                            
                         }
                         vertices.push_back(tmp);

@@ -63,7 +63,7 @@ private: // gfx helper
 ///
 /// ============= STUDENT CODE BEGIN =============
 
-    int getAOtype(const tg::ivec3& pt, const tg::ivec3& n, const tg::ivec3& tg1, const tg::ivec3& tg2) const;
+    int getAOtype(const tg::ipos3& pt, const tg::ivec3& n, const tg::ivec3& tg1, const tg::ivec3& tg2) const;
     /// Builds the mesh for a given material
     glow::SharedVertexArray buildMeshFor(int mat) const;
     /// Returns the ambient occlusion at a given position
