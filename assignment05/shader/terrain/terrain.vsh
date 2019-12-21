@@ -28,7 +28,6 @@ uniform float uTextureScale;
 
 in ivec3 root;
 
-in int direction;
 in int axis;
 
 in float ao;

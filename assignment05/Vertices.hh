@@ -31,7 +31,6 @@ struct TerrainVertex
 {
 	tg::ipos3 root;
 
-	int direction;
 	int axis;
 
 	float ao;
@@ -43,11 +42,10 @@ struct TerrainVertex
 
 	int which;
 
-	TerrainVertex(tg::ipos3 &root, int direction, int axis, float ao, int osA, int osB, int osC, int osD, int which)
+	TerrainVertex(tg::ipos3 &root, int axis, float ao, int osA, int osB, int osC, int osD, int which)
 	{
 		this->root = root;
 
-		this->direction = direction;
 		this->axis = axis;
 
 		this->ao = ao;
@@ -66,10 +64,6 @@ struct TerrainVertex
 			{
 				&TerrainVertex::root,
 				"root"
-			},
-			{
-				&TerrainVertex::direction,
-				"direction"
 			},
 			{
 				&TerrainVertex::axis,

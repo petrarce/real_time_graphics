@@ -153,11 +153,6 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                         float aoC = aoAt(globalPos, vtxC, normal);
                         float aoD = aoAt(globalPos, vtxD, normal);
 
-                        // float aoA = 1.0;
-                        // float aoB = 1.0;
-                        // float aoC = 1.0;
-                        // float aoD = 1.0;
-
                         int osA = getVtxIdx(vtxA);
                         int osB = getVtxIdx(vtxB);
                         int osC = getVtxIdx(vtxC);
@@ -166,37 +161,37 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
                         if (direction == -1) {
 
                             if (fabs(aoB - aoD) > fabs(aoA - aoC)) {
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoA, osA, osB, osC, osD, 0));  // A
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoB, osA, osB, osC, osD, 1));  // B
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoC, osA, osB, osC, osD, 2));  // C
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoC, osA, osB, osC, osD, 2));  // C
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoD, osA, osB, osC, osD, 3));  // D
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoA, osA, osB, osC, osD, 0));  // A
                             } else {
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoB, osA, osB, osC, osD, 1));  // B
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoC, osA, osB, osC, osD, 2));  // C
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoD, osA, osB, osC, osD, 3));  // D
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoD, osA, osB, osC, osD, 3));  // D
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoA, osA, osB, osC, osD, 0));  // A
-                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoB, osA, osB, osC, osD, 1));  // B
                             }
                         }
                         else {
 
                             if (fabs(aoA - aoC) < fabs(aoB - aoD)) {
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoA, osA, osB, osC, osD, 0));  // A
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoD, osA, osB, osC, osD, 3));  // D
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoC, osA, osB, osC, osD, 2));  // C
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoC, osA, osB, osC, osD, 2));  // C
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoB, osA, osB, osC, osD, 1));  // B
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoA, osA, osB, osC, osD, 0));  // A
                             } else {
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoB, osA, osB, osC, osD, 1));  // B
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoA, osA, osB, osC, osD, 0));  // A
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoD, osA, osB, osC, osD, 3));  // D
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoD, osA, osB, osC, osD, 3));  // D
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoC, osA, osB, osC, osD, 2));  // C
-                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, axis, aoB, osA, osB, osC, osD, 1));  // B
                             }
                         }
                     }
