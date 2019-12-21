@@ -1,6 +1,7 @@
 #include "Chunk.hh"
 
 #include <set>
+#include <cassert>
 
 #include <glow/common/log.hh>
 #include <glow/common/profiling.hh>
@@ -63,6 +64,8 @@ std::map<int, SharedVertexArray> Chunk::queryMeshes()
 {
     GLOW_ACTION(); // time this method (shown on shutdown)
 
+    if (!this->isDirty()) return mMeshes;
+
     // clear list of cached meshes
     mMeshes.clear();
     std::set<int> built; // track already built materials
@@ -72,8 +75,8 @@ std::map<int, SharedVertexArray> Chunk::queryMeshes()
         for (auto y = 0; y < size; ++y)
             for (auto x = 0; x < size; ++x)
             {
-                tg::ivec3 rp = { x, y, z };
-                auto const &b = block(rp); // get block
+                tg::ivec3 localPos = { x, y, z };
+                auto const &b = block(localPos); // get block
 
                 // if block material is not air and not already built
                 if (!b.isAir() && !built.count(b.mat))
@@ -88,8 +91,15 @@ std::map<int, SharedVertexArray> Chunk::queryMeshes()
                 }
             }
 
-    glow::info() << "Rebuilding mesh for " << chunkPos;
+    this->setDirty(false);
+
+    glow::info() << "Rebuilt mesh for " << chunkPos;
     return mMeshes;
+}
+
+int Chunk::getVtxIdx(tg::ivec3 offset) const
+{
+	return offset.x * 4 + offset.y * 2 + offset.z;
 }
 
 SharedVertexArray Chunk::buildMeshFor(int mat) const
@@ -99,41 +109,135 @@ SharedVertexArray Chunk::buildMeshFor(int mat) const
     // assemble data
     std::vector<TerrainVertex> vertices;
 
-    for (auto z = 0; z < size; ++z)
-        for (auto y = 0; y < size; ++y)
-            for (auto x = 0; x < size; ++x)
-            {
-                tg::ivec3 rp = { x, y, z }; // local position
-                auto gp = chunkPos + rp;     // global position
-                auto const &blk = block(rp);
+    for (auto z = 0; z < size; ++z) {
 
-                if (blk.mat != mat)
-                    continue; // consider only current material
+        for (auto y = 0; y < size; ++y) {
 
-                // go over all 6 directions
-                for (auto s : { -1, 1 })
-                    for (auto dir : { 0, 1, 2 })
-                    {
-                        // face normal
-                        auto n = s * tg::ivec3(dir == 0, dir == 1, dir == 2);
+            for (auto x = 0; x < size; ++x) {
 
-                        // TODO!
+                tg::ivec3 localPos = { x, y, z };  // local position
+
+                auto globalPos = chunkPos + localPos;  // global position
+
+                if (block(localPos).mat != mat) continue;  // consider only current material
+
+                for (auto direction : { -1, 1 }) {
+
+                    for (auto axis : { 0, 1, 2 }) {
+
+                        auto normal = direction * tg::ivec3(axis == 0, axis == 1, axis == 2);
+
+                        bool that_solid = this->queryBlock(globalPos + normal).isSolid();
+
+                        bool same_mat = block(localPos).mat == this->queryBlock(globalPos + normal).mat;
+
+                        if (that_solid | same_mat) continue;
+
+                        auto vtxA = tg::ivec3((axis == 0) * (direction == 1), (axis == 0) * 0, (axis == 0) * 0);
+                        auto vtxB = tg::ivec3((axis == 0) * (direction == 1), (axis == 0) * 0, (axis == 0) * 1);
+                        auto vtxD = tg::ivec3((axis == 0) * (direction == 1), (axis == 0) * 1, (axis == 0) * 0);
+                        auto vtxC = tg::ivec3((axis == 0) * (direction == 1), (axis == 0) * 1, (axis == 0) * 1);
+
+                        vtxA += tg::ivec3((axis == 1) * 0, (axis == 1) * (direction == 1), (axis == 1) * 0);
+                        vtxB += tg::ivec3((axis == 1) * 1, (axis == 1) * (direction == 1), (axis == 1) * 0);
+                        vtxD += tg::ivec3((axis == 1) * 0, (axis == 1) * (direction == 1), (axis == 1) * 1);
+                        vtxC += tg::ivec3((axis == 1) * 1, (axis == 1) * (direction == 1), (axis == 1) * 1);
+
+                        vtxA += tg::ivec3((axis == 2) * 0, (axis == 2) * 0, (axis == 2) * (direction == 1));
+                        vtxB += tg::ivec3((axis == 2) * 0, (axis == 2) * 1, (axis == 2) * (direction == 1));
+                        vtxD += tg::ivec3((axis == 2) * 1, (axis == 2) * 0, (axis == 2) * (direction == 1));
+                        vtxC += tg::ivec3((axis == 2) * 1, (axis == 2) * 1, (axis == 2) * (direction == 1));
+
+                        float aoA = aoAt(globalPos, vtxA, normal);
+                        float aoB = aoAt(globalPos, vtxB, normal);
+                        float aoC = aoAt(globalPos, vtxC, normal);
+                        float aoD = aoAt(globalPos, vtxD, normal);
+
+                        // float aoA = 1.0;
+                        // float aoB = 1.0;
+                        // float aoC = 1.0;
+                        // float aoD = 1.0;
+
+                        int osA = getVtxIdx(vtxA);
+                        int osB = getVtxIdx(vtxB);
+                        int osC = getVtxIdx(vtxC);
+                        int osD = getVtxIdx(vtxD);
+
+                        if (direction == -1) {
+
+                            if (fabs(aoB - aoD) > fabs(aoA - aoC)) {
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                            } else {
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, 1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                            }
+                        }
+                        else {
+
+                            if (fabs(aoA - aoC) < fabs(aoB - aoD)) {
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                            } else {
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoA, osA, osB, osC, osD, 0));  // A
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoD, osA, osB, osC, osD, 3));  // D
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoC, osA, osB, osC, osD, 2));  // C
+                                vertices.push_back(TerrainVertex(globalPos, -1, axis, aoB, osA, osB, osC, osD, 1));  // B
+                            }
+                        }
                     }
+                }
             }
+        }
+    }
 
-    if (vertices.empty())
-        return nullptr; // no visible faces
+    if (vertices.empty()) return nullptr;
 
     auto ab = ArrayBuffer::create(TerrainVertex::attributes());
     ab->bind().setData(vertices);
 
     glow::info() << "Created " << vertices.size() << " verts for mat " << mat << " in chunk " << chunkPos;
-    return VertexArray::create(ab);
+    return VertexArray::create(ab, GL_TRIANGLES);
 }
 
-float Chunk::aoAt(tg::ipos3 pos, tg::ivec3 dx, tg::ivec3 dy) const
+float Chunk::aoAt(tg::ipos3 pos, tg::ivec3 vtx, tg::ivec3 normal) const
 {
-    return 1.0f; // TODO
+    auto diagonal = vtx - (1 - vtx) - normal;
+
+    auto bidiagonal = cross(diagonal, normal);
+
+    auto dx = tg::ivec3(normalize(diagonal + bidiagonal));
+    auto dy = tg::ivec3(normalize(diagonal - bidiagonal));
+
+    return aoAt(pos, dx, dy, normal);
+}
+
+float Chunk::aoAt(tg::ipos3 pos, tg::ivec3 dx, tg::ivec3 dy, tg::ivec3 dz) const
+{
+    auto p00 = queryBlock(pos + dz);
+    auto p01 = queryBlock(pos + dy + dz);
+    auto p11 = queryBlock(pos + dx + dy + dz);
+    auto p10 = queryBlock(pos + dx + dz);
+
+    assert (!p00.isSolid());
+
+    if (p10.isSolid() & p01.isSolid()) return 0.0;
+
+    return (3.0 - p10.isSolid() - p01.isSolid() - p11.isSolid()) / 3.0;
 }
 /// ============= STUDENT CODE END =============
 

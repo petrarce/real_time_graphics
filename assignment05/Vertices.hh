@@ -29,14 +29,78 @@
 
 struct TerrainVertex
 {
-    tg::pos3 pos;
+	tg::ipos3 root;
 
-    static std::vector<glow::ArrayBufferAttribute> attributes()
-    {
-        return {
-            { &TerrainVertex::pos, "aPosition" },  //
-        };
-    }
+	int direction;
+	int axis;
+
+	float ao;
+
+	int osA;
+	int osB;
+	int osC;
+	int osD;
+
+	int which;
+
+	TerrainVertex(tg::ipos3 &root, int direction, int axis, float ao, int osA, int osB, int osC, int osD, int which)
+	{
+		this->root = root;
+
+		this->direction = direction;
+		this->axis = axis;
+
+		this->ao = ao;
+
+		this->osA = osA;
+		this->osB = osB;
+		this->osC = osC;
+		this->osD = osD;
+
+		this->which = which;
+	}
+
+	static std::vector<glow::ArrayBufferAttribute> attributes()
+	{
+		return {
+			{
+				&TerrainVertex::root,
+				"root"
+			},
+			{
+				&TerrainVertex::direction,
+				"direction"
+			},
+			{
+				&TerrainVertex::axis,
+				"axis"
+			},
+			{
+				&TerrainVertex::ao,
+				"ao"
+			},
+			{
+				&TerrainVertex::osA,
+				"osA"
+			},
+			{
+				&TerrainVertex::osB,
+				"osB"
+			},
+			{
+				&TerrainVertex::osC,
+				"osC"
+			},
+			{
+				&TerrainVertex::osD,
+				"osD"
+			},
+			{
+				&TerrainVertex::which,
+				"which"
+			}
+		};
+	}
 };
 
 /// ============= STUDENT CODE END =============

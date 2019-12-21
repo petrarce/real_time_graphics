@@ -63,10 +63,15 @@ private: // gfx helper
 ///
 /// ============= STUDENT CODE BEGIN =============
 
-    /// Builds the mesh for a given material
+    int getVtxIdx(tg::ivec3 offset) const;
+
     glow::SharedVertexArray buildMeshFor(int mat) const;
-    /// Returns the ambient occlusion at a given position
-    float aoAt(tg::ipos3 pos, tg::ivec3 dx, tg::ivec3 dy) const;
+
+    float aoAt(tg::ipos3 pos, tg::ivec3 dx, tg::ivec3 dy, tg::ivec3 dz) const;
+
+    float aoAt(tg::ipos3 pos, tg::ivec3 vtx, tg::ivec3 normal) const;
+
+    void setDirty(bool flag) { mIsDirty = flag; }
 
 /// ============= STUDENT CODE END =============
 
