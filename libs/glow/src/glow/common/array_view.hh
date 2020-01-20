@@ -92,18 +92,13 @@ private:
 template <class Range>
 auto make_array_view(Range&& r)
 {
-    using std::begin;
-    using T = std::decay_t<decltype(*begin(r))>;
+    using T = std::remove_reference_t<decltype(r.data()[0])>;
     return array_view<T>(std::forward<Range>(r));
 }
 
 namespace detail
 {
-using glow::make_array_view;
 template <class Range>
-char make_array_view(...);
-
-template <class Range>
-constexpr bool can_make_array_view = sizeof(make_array_view<Range>(std::declval<Range>())) > 1;
+constexpr bool can_make_array_view = detail::convertible_to_array_view<Range, void>;
 }
 }

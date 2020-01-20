@@ -38,7 +38,7 @@ struct uniform
     template <class U = T>
     uniform(UsedProgram&, U&&)
     {
-        static_assert(tg::always_false<U>, "this type is not supported for uniforms");
+        static_assert(tg::always_false<U, T>, "this type is not supported for uniforms");
     }
 };
 

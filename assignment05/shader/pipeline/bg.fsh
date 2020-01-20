@@ -25,7 +25,7 @@ void main()
     vec3 sunColor = vec3(0.9,0.9,0.7);
     float dotVL = max(0, dot(uLightDir, normalize(far - near).xyz));
     // Sun
-    fColor += 0.2*smoothstep(0.996, 0.9999, dotVL) * sunColor;
+    fColor += 0.2 * smoothstep(0.996, 0.9999, dotVL) * sunColor;
     // Corona
     fColor += mix(vec3(0), sunColor, pow(dotVL, 180));
 

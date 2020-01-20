@@ -35,7 +35,7 @@ struct UVSphereVertex
 
 /// Builder for a UVSphere
 /// VertexT needs a c'tor that can be called with
-///   (glm::vec3 position, glm::vec3 normal, glm::vec3 tangent, glm::vec2 texCoord)
+///   (tg::pos3 position, tg::vec3 normal, tg::vec3 tangent, tg::pos texCoord)
 ///
 /// Supported built-in types:
 ///   UVSphereVertex

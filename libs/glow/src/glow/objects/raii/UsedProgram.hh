@@ -75,7 +75,7 @@ public: // gl functions with use
         else if constexpr (detail::can_make_array_view<T>)
         {
             auto view = glow::make_array_view(value);
-            using E = typename decltype(view)::element_type;
+            using E = std::remove_const_t<typename decltype(view)::element_type>;
             uniform<E[]>(name) = view;
         }
         else
