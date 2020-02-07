@@ -189,7 +189,7 @@ public: // gl functions without use
     /// If you get linker errors, the type is not supported
     /// Returns default-constructed values for optimized uniforms
     /// Usage:
-    ///    auto pos = prog->getUniform<glm::vec3>("uPosition");
+    ///    auto pos = prog->getUniform<tg::pos3>("uPosition");
     ///
     /// LIMITATIONS:
     /// currently doesn't work for arrays/structs

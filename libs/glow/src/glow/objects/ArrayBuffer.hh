@@ -59,14 +59,14 @@ GLOW_SHARED(class, ArrayBuffer);
  * (Automatically uses an appropriate AttributeMode! Float for floats, Integer for ints, Double for doubles,
  *  NormalizedInteger is not supported)
  *
- * ab->defineAttribute<glm::vec3>( "aPosition" );
+ * ab->defineAttribute<tg::pos3>( "aPosition" );
  *
  * Convenience #2: (Automatically uses an appropriate AttributeMode! Float for floats, Integer for ints, Double for
  *                  doubles, NormalizedInteger is not supported)
  *
  * struct MyVertex {
- *  glm::vec3 aPosition;
- *  glm::vec2 texCoord;
+ *  tg::pos3 aPosition;
+ *  tg::pos2 texCoord;
  * };
  *
  * ab->defineAttribute(&MyVertex::aPosition, "aPosition");

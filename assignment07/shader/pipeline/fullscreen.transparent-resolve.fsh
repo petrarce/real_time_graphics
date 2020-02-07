@@ -1,7 +1,6 @@
 #include "../common.glsl"
 #include "../shading.glsl"
 
-// defined in shading: uniform sampler2DRect uTexOpaqueDepth;
 uniform sampler2DRect uTexShadedOpaque;
 uniform sampler2DRect uTexTBufferAccumA;
 uniform sampler2DRect uTexTBufferAccumB;
@@ -33,7 +32,11 @@ void main()
     ///     - you may want to clamp the accumulated alpha between 1e-4 and 5e4
     ///
     /// ============= STUDENT CODE BEGIN =============
+    vec4 accumA = texelFetch(uTexTBufferAccumA, coords);
+    float accumB = texelFetch(uTexTBufferAccumB, coords).x;
 
+    transparentColor = accumA.rgb / min(max(accumB, 1e-4), 5e4);
+    alpha = 1 - accumA.a;
     /// ============= STUDENT CODE END =============
 
     /// Task 2.c
@@ -47,8 +50,10 @@ void main()
     ///     - be sure to use bi-linear interpolation
     ///
     /// ============= STUDENT CODE BEGIN =============
-    opaqueColor = texelFetch(uTexShadedOpaque, coords).rgb;
-    float opaqueDepth = texelFetch(uTexOpaqueDepth, coords).x;
+    vec3 distortion = texelFetch(uTexTBufferDistortion, coords).rgb;
+
+    opaqueColor = texelFetch(uTexShadedOpaque, coords - ivec2(distortion.xy)).rgb;
+    float opaqueDepth = texelFetch(uTexOpaqueDepth, coords - ivec2(distortion.xy)).x;
     /// ============= STUDENT CODE END =============
 
     // background
@@ -67,7 +72,27 @@ void main()
         ///     - vPosition contains screen coordinates from 0..1
         ///
         /// ============= STUDENT CODE BEGIN =============
+        vec4 near = uInvProj * vec4(vec3(vPosition, 0) * 2 - 1, 1);
+        vec4 loca = uInvProj * vec4(vec3(vPosition, opaqueDepth) * 2 - 1, 1);
+        vec4 away = uInvProj * vec4(vec3(vPosition, 1) * 2 - 1, 1);
 
+        near /= near.w;
+        loca /= loca.w;
+        away /= away.w;
+
+        near = uInvView * near;
+        loca = uInvView * loca;
+        away = uInvView * away;
+
+        if (length(loca - near) >= uRenderDistance * 0.99) {
+
+            float a = uRenderDistance * 0.99 / length(away - near);
+            float b = length(loca - near) / length(away - near);
+
+            float sky_alpha = (b - a) / (1 - a);
+
+            opaqueColor = opaqueColor * (1 - sky_alpha) + sky_alpha * texture(uTexCubeMap, (loca - near).xyz).rgb;
+        }
         /// ============= STUDENT CODE END =============
     }
 

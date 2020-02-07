@@ -224,9 +224,9 @@ private: // rendering pipeline
 
     // stats
     int mStatsChunksGenerated = -1;
-    int mStatsMeshesRendered[4];
-    int mStatsVerticesRendered[4];
-    float mStatsVerticesPerMesh[4];
+    int mStatsMeshesRendered[4] = {};
+    int mStatsVerticesRendered[4] = {};
+    float mStatsVerticesPerMesh[4] = {};
 
 private: // gfx options
     /// accumulated time
@@ -234,7 +234,7 @@ private: // gfx options
 
     constexpr static int accumframes = 30;
     int64_t mCurframeidx = 0;
-    float mLastFrameTimes[accumframes];
+    float mLastFrameTimes[accumframes] = {};
     float mAvgFrameTime = 0.0f;
     double mLastStatUpdate = 0.0;
 

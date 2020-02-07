@@ -69,7 +69,7 @@ namespace glow
  * TODO: Stencil func/op
  */
 
-#define GLOW_SCOPED(funcName, ...) glow::scoped::funcName GLOW_MACRO_JOIN(_glow_scoped_gl_, __COUNTER__)(__VA_ARGS__) // enforce ;
+#define GLOW_SCOPED(funcName, ...) glow::scoped::funcName GLOW_MACRO_JOIN(_glow_scoped_gl_, __COUNTER__)(__VA_ARGS__)
 
 namespace scoped
 {

@@ -72,10 +72,15 @@ public: // gl functions with use
     {
         if constexpr (detail::uniform<T>::is_supported)
             uniform<T>(name) = value;
+        else if constexpr (std::is_array_v<T>)
+        {
+            using E = std::decay_t<decltype(value[0])>;
+            uniform<E[]>(name) = value;
+        }
         else if constexpr (detail::can_make_array_view<T>)
         {
-            auto view = glow::make_array_view(value);
-            using E = std::remove_const_t<typename decltype(view)::element_type>;
+            using E = std::decay_t<decltype(value.data()[0])>;
+            auto view = array_view<E const>(value);
             uniform<E[]>(name) = view;
         }
         else

@@ -12,23 +12,20 @@ namespace glow
 template <class T>
 struct array_view;
 
-template <class Range>
-auto make_array_view(Range&& r);
-
 namespace detail
 {
-template <class Range, class T>
-auto convertible_to_array_view_test(int) -> decltype(static_cast<T*>(std::declval<Range>().data()), static_cast<size_t>(std::declval<Range>().size()), 0)
+template <class Range, class T, class = void>
+struct convertible_to_array_view_t : std::false_type
 {
-}
-template <class Range, class T>
-char convertible_to_array_view_test(...);
-
-template <class Range, class T>
-struct convertible_to_array_view_t
-{
-    static constexpr inline bool value = sizeof(convertible_to_array_view_test<Range, T>(0)) > 1;
 };
+template <class Range, class T>
+struct convertible_to_array_view_t<Range,
+                                   T,
+                                   std::void_t<decltype(static_cast<T*>(std::declval<Range>().data()), static_cast<size_t>(std::declval<Range>().size()))>>
+  : std::true_type
+{
+};
+
 template <class Range, class T>
 static constexpr inline bool convertible_to_array_view = convertible_to_array_view_t<Range, T>::value;
 }
@@ -99,6 +96,6 @@ auto make_array_view(Range&& r)
 namespace detail
 {
 template <class Range>
-constexpr bool can_make_array_view = detail::convertible_to_array_view<Range, void>;
+constexpr bool can_make_array_view = convertible_to_array_view<Range, void>;
 }
 }

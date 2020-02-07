@@ -577,7 +577,21 @@ void Assignment07::renderTransparentPass()
     ///     - think about the correct clear color
     ///
     /// ============= STUDENT CODE BEGIN =============
+    auto fb = mFramebufferTBuffer->bind();
 
+    GLOW_SCOPED(clearColor, 0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    GLOW_SCOPED(enable, GL_BLEND);
+    glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+
+    GLOW_SCOPED(disable, GL_CULL_FACE);
+    GLOW_SCOPED(depthMask, GL_FALSE);
+
+    if (mPassTransparent) renderScene(getCamera().get(), RenderPass::Transparent);
+
+    GLOW_SCOPED(depthMask, GL_TRUE);
+    GLOW_SCOPED(enable, GL_CULL_FACE);
     /// ============= STUDENT CODE END =============
 }
 

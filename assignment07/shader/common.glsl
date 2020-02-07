@@ -55,12 +55,12 @@ float oitWeight(float fragZ, float alpha)
 /// ============= STUDENT CODE BEGIN =============
 vec4 tBufferAccumA(vec3 premultColor, float alpha, float w)
 {
-    return vec4(0);
+    return vec4(premultColor * w, alpha);
 }
 
 float tBufferAccumB(float alpha, float w)
 {
-    return 0;
+    return alpha * w;
 }
 /// ============= STUDENT CODE END =============
 
@@ -72,6 +72,6 @@ float tBufferAccumB(float alpha, float w)
 /// ============= STUDENT CODE BEGIN =============
 vec3 tBufferDistortion(vec2 offset, float blurriness)
 {
-    return vec3(0);
+    return vec3(offset, blurriness);
 }
 /// ============= STUDENT CODE END =============
